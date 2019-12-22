@@ -36,8 +36,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXProgressBar;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Pane;
@@ -47,33 +49,58 @@ import javafx.scene.layout.Priority;
  *
  * @author thinkpro
  */
-public class FXMLDocumentController extends Thread implements Initializable  {
+public class FXMLDocumentController extends Thread   {
     
-     private String path;
-    private ArrayList<File> files;
-    private String[] extens;
-  
+           private String path;
+           private ArrayList<File> files;
+        
+           VBox tab ;
+           private String fileUrl;
+           
+          
+           
+           
+           //constructor
+           public FXMLDocumentController(String fileUrl,String path,VBox vbox){
+           this.path = path;
+           this.tab= vbox;
+           this.fileUrl=fileUrl;
+                                            
+                                }
    
-    
-    @FXML
-    private VBox tab;
-    
+           
+            public void setVbox(VBox v) {
+                this.tab=v;
+                
+            }
+                   public void setFileUrl(String fileUrl) {
+                                
+                          this.fileUrl=fileUrl;
+                             
+                       }
+           
+           
+           
+           
+            void setPath(String path) {
 
-   @FXML
-    private TextField input;
-     @FXML
-    private TextField input1;
-    
-    @FXML 
-    private AnchorPane anchorid ; 
-    
-   
-    @FXML
-     void downloadFile()
+                   this.path= path;           
+
+                            }
+            String getFileUrl(){
+                
+                return fileUrl;
+            }
+            
+          
+            
+            
+            
+     void downloadFile(String fileUrl, String path )
             throws IOException {
         
         int BUFFER_SIZE = 4096;
-        URL url = new URL(input.getText());
+        URL url = new URL(fileUrl);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         int responseCode = httpConn.getResponseCode();
  
@@ -93,8 +120,8 @@ public class FXMLDocumentController extends Thread implements Initializable  {
                 }
             } else {
                 // extracts file name from URL
-                fileName = input.getText().substring(input.getText().lastIndexOf("/") + 1,
-                        input.getText().length());
+                fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1,
+                        fileUrl.length());
             }
  
             System.out.println("Content-Type = " + contentType);
@@ -104,51 +131,66 @@ public class FXMLDocumentController extends Thread implements Initializable  {
  
             // opens input stream from the HTTP connection
             InputStream inputStream = httpConn.getInputStream();
-        String saveFilePath = input1.getText() + File.separator + fileName;
+            String saveFilePath =path + File.separator + fileName;
         // creating the Hbox
-        HBox hbox = new HBox();
-        hbox.setSpacing(20);
-        hbox.setAlignment(Pos.CENTER);
+            HBox hbox = new HBox();
+            hbox.setSpacing(20);
+            hbox.setAlignment(Pos.CENTER);
         
-        Button play = new Button("Play");
-        Button pause = new Button("Pause");
-        Button delete = new Button("Delete");
+            Button play = new Button("Play");
+            Button pause = new Button("Pause");
+            Button delete = new Button("Delete");
 
 
-        hbox.getChildren().add(play);
-        hbox.getChildren().add(pause);
-        hbox.getChildren().add(delete);
-        hbox.getChildren().add(new Label(fileName));
-         JFXProgressBar statusBars= new  JFXProgressBar();
+                hbox.getChildren().add(play);
+                hbox.getChildren().add(pause);
+                hbox.getChildren().add(delete);
+                hbox.getChildren().add(new Label(fileName));
+                JFXProgressBar statusBars= new  JFXProgressBar();
+                
+                
                 hbox.getChildren().add(statusBars);
 
-        
-        tab.getChildren().add(hbox);
-            // opens an output stream to save into file
+                
+                if (this.tab != null ) {
+                     this.tab.getChildren().add(hbox);
+                }
+                else {
+                    System.out.println("VBox is null");
+                }
+                           
+                       
+                     
+                      
+                            
+                          
+                    
+
+                         // opens an output stream to save into file
             
             
             FileOutputStream outputStream = new FileOutputStream(saveFilePath);
  
             int bytesRead = -1;
             byte[] buffer = new byte[BUFFER_SIZE];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                outputStream.close();
+                inputStream.close();
+
+                System.out.println("File downloaded");
+            } else {
+                System.out.println("No file to download. Server replied HTTP code: " + responseCode);
             }
- 
-            outputStream.close();
-            inputStream.close();
- 
-            System.out.println("File downloaded");
-        } else {
-            System.out.println("No file to download. Server replied HTTP code: " + responseCode);
+            httpConn.disconnect();
         }
-        httpConn.disconnect();
-    }
 
    
   
-    @FXML
-    private void directoryChoose(ActionEvent e) {
+  
+     void directoryChoose(AnchorPane anchorid,TextField input1) {
         Stage stage = (Stage) anchorid.getScene().getWindow();
         final DirectoryChooser dirchoose = new DirectoryChooser();
         
@@ -162,9 +204,9 @@ public class FXMLDocumentController extends Thread implements Initializable  {
                       System.out.println("You failed !");
                  }
     }
-   @FXML
+   
    private void getRepoFiles (){
-        path =input1.getText();
+        path =this.path;
         files = new ArrayList<File>();
 
         File repo = new File (path);
@@ -179,31 +221,14 @@ public class FXMLDocumentController extends Thread implements Initializable  {
      @Override
      public void run() {
      try {
-         downloadFile();
+         this.downloadFile(this.fileUrl,this.path);
      }
      catch(IOException e) {
          System.out.println(e);
          
      }
    }
-     @FXML
-     void runit(){
-          FXMLDocumentController t = new FXMLDocumentController();
-     
-     t.start();
-         
-     }
-   
- 
   
-      @Override
-    public void initialize(URL url, ResourceBundle rb) {
-    
-
-        
-    }    
-
-    
-   
+      
    
 }
