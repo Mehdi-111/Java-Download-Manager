@@ -47,7 +47,7 @@ import javafx.scene.layout.Priority;
  *
  * @author thinkpro
  */
-public class FXMLDocumentController implements Initializable  {
+public class FXMLDocumentController extends Thread implements Initializable  {
     
      private String path;
     private ArrayList<File> files;
@@ -176,13 +176,29 @@ public class FXMLDocumentController implements Initializable  {
                     System.out.println(fileList[i]);
 }
 } 
-   
+     @Override
+     public void run() {
+     try {
+         downloadFile();
+     }
+     catch(IOException e) {
+         System.out.println(e);
+         
+     }
+   }
+     @FXML
+     void runit(){
+          FXMLDocumentController t = new FXMLDocumentController();
+     
+     t.start();
+         
+     }
    
  
   
       @Override
     public void initialize(URL url, ResourceBundle rb) {
-     
+    
 
         
     }    
