@@ -36,6 +36,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXProgressBar;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -47,7 +48,7 @@ import javafx.scene.layout.Priority;
  *
  * @author thinkpro
  */
-public class FXMLDocumentController extends Thread implements Initializable  {
+public class FXMLDocumentController implements Initializable, Runnable  {
     
      private String path;
     private ArrayList<File> files;
@@ -60,7 +61,7 @@ public class FXMLDocumentController extends Thread implements Initializable  {
     
 
    @FXML
-    private TextField input;
+    private TextField input ;
      @FXML
     private TextField input1;
     
@@ -68,12 +69,22 @@ public class FXMLDocumentController extends Thread implements Initializable  {
     private AnchorPane anchorid ; 
     
    
-    @FXML
-     void downloadFile()
-            throws IOException {
-        
+   
+      @FXML
+      @Override
+    public  void run()
+                {
+                    
+                    Platform.runLater(() -> {
+           try { 
+
         int BUFFER_SIZE = 4096;
-        URL url = new URL(input.getText());
+    
+         
+          
+         
+        
+         URL url = new URL(input.getText());
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         int responseCode = httpConn.getResponseCode();
  
@@ -123,7 +134,7 @@ public class FXMLDocumentController extends Thread implements Initializable  {
                 hbox.getChildren().add(statusBars);
 
         
-        tab.getChildren().add(hbox);
+           tab.getChildren().add(hbox);
             // opens an output stream to save into file
             
             
@@ -142,10 +153,13 @@ public class FXMLDocumentController extends Thread implements Initializable  {
         } else {
             System.out.println("No file to download. Server replied HTTP code: " + responseCode);
         }
-        httpConn.disconnect();
-    }
+        httpConn.disconnect(); }
+     catch ( IOException e  ) {
+         System.out.println(e);
+     }
+    });
 
-   
+                            }
   
     @FXML
     private void directoryChoose(ActionEvent e) {
@@ -176,29 +190,23 @@ public class FXMLDocumentController extends Thread implements Initializable  {
                     System.out.println(fileList[i]);
 }
 } 
-     @Override
-     public void run() {
-     try {
-         downloadFile();
-     }
-     catch(IOException e) {
-         System.out.println(e);
-         
-     }
-   }
-     @FXML
-     void runit(){
-          FXMLDocumentController t = new FXMLDocumentController();
-     
-     t.start();
-         
-     }
    
+   
+ 
+   
+   
+   
+  
+  
+    @FXML
+   void runit(){
+    Thread t = new Thread(this);
+    t.start();
+   }
  
   
       @Override
     public void initialize(URL url, ResourceBundle rb) {
-    
 
         
     }    
