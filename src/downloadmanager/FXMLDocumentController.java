@@ -42,6 +42,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 
@@ -51,46 +52,41 @@ import javafx.scene.layout.Priority;
  */
 public class FXMLDocumentController extends Thread   {
     
-           private String path;
-           private ArrayList<File> files;
-        
-           VBox tab ;
-           private String fileUrl;
+                    private String path;
+                    private ArrayList<File> files;
+
+                    private String fileUrl;
+                    String fileName;
+
            
-          
            
-           
-           //constructor
-           public FXMLDocumentController(String fileUrl,String path,VBox vbox){
-           this.path = path;
-           this.tab= vbox;
-           this.fileUrl=fileUrl;
-                                            
-                                }
+                        //constructor
+                      FXMLDocumentController( String fileUrl ,String path,String fileName) {
+                          this.fileUrl = fileUrl;
+                          this.path=path;
+                          this.fileName=fileName;
+                      }
    
            
-            public void setVbox(VBox v) {
-                this.tab=v;
-                
-            }
-                   public void setFileUrl(String fileUrl) {
-                                
-                          this.fileUrl=fileUrl;
-                             
-                       }
-           
-           
-           
-           
-            void setPath(String path) {
 
-                   this.path= path;           
+                        public void setFileUrl(String fileUrl) {
 
-                            }
-            String getFileUrl(){
-                
-                return fileUrl;
-            }
+                               this.fileUrl=fileUrl;
+
+                           }
+
+           
+           
+           
+                    void setPath(String path) {
+
+                           this.path= path;           
+
+                                    }
+                    String getFileUrl(){
+
+                        return fileUrl;
+                    }
             
           
             
@@ -99,6 +95,8 @@ public class FXMLDocumentController extends Thread   {
      void downloadFile(String fileUrl, String path )
             throws IOException {
         
+                 FXMLLoader loader = new FXMLLoader(getClass().getResource("FXMLDocument.fxml"));
+
         int BUFFER_SIZE = 4096;
         URL url = new URL(fileUrl);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
@@ -128,12 +126,13 @@ public class FXMLDocumentController extends Thread   {
             System.out.println("Content-Disposition = " + disposition);
             System.out.println("Content-Length = " + contentLength);
             System.out.println("fileName = " + fileName);
+            this.fileName = fileName;
  
             // opens input stream from the HTTP connection
             InputStream inputStream = httpConn.getInputStream();
             String saveFilePath =path + File.separator + fileName;
         // creating the Hbox
-            HBox hbox = new HBox();
+         /*   HBox hbox = new HBox();
             hbox.setSpacing(20);
             hbox.setAlignment(Pos.CENTER);
         
@@ -142,22 +141,7 @@ public class FXMLDocumentController extends Thread   {
             Button delete = new Button("Delete");
 
 
-                hbox.getChildren().add(play);
-                hbox.getChildren().add(pause);
-                hbox.getChildren().add(delete);
-                hbox.getChildren().add(new Label(fileName));
-                JFXProgressBar statusBars= new  JFXProgressBar();
-                
-                
-                hbox.getChildren().add(statusBars);
-
-                
-                if (this.tab != null ) {
-                     this.tab.getChildren().add(hbox);
-                }
-                else {
-                    System.out.println("VBox is null");
-                }
+              
                            
                        
                      
@@ -166,13 +150,26 @@ public class FXMLDocumentController extends Thread   {
                           
                     
 
+ 
+                            hbox.getChildren().add(play);
+                            hbox.getChildren().add(pause);
+                            hbox.getChildren().add(delete);
+                            hbox.getChildren().add(new Label(fileName));
+                            JFXProgressBar statusBars= new  JFXProgressBar();
+                            VBox controller = loader.getController();
+
+                            hbox.getChildren().add(statusBars);
+
+                
+              
+                        controller.getChildren().add(hbox); */
+         
                          // opens an output stream to save into file
             
             
-            FileOutputStream outputStream = new FileOutputStream(saveFilePath);
- 
-            int bytesRead = -1;
-            byte[] buffer = new byte[BUFFER_SIZE];
+                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+                        int bytesRead = -1;
+                        byte[] buffer = new byte[BUFFER_SIZE];
                 while ((bytesRead = inputStream.read(buffer)) != -1) {
                     outputStream.write(buffer, 0, bytesRead);
                 }
@@ -190,7 +187,7 @@ public class FXMLDocumentController extends Thread   {
    
   
   
-     void directoryChoose(AnchorPane anchorid,TextField input1) {
+     String directoryChoose(AnchorPane anchorid,TextField input1) {
         Stage stage = (Stage) anchorid.getScene().getWindow();
         final DirectoryChooser dirchoose = new DirectoryChooser();
         
@@ -199,10 +196,14 @@ public class FXMLDocumentController extends Thread   {
                  if(file != null) {
                    System.out.println(file.getAbsolutePath());
                    input1.setText(file.getAbsolutePath());
+                  
+                   
                                    }
                  else {
                       System.out.println("You failed !");
                  }
+                 return file.getAbsolutePath();
+               
     }
    
    private void getRepoFiles (){
