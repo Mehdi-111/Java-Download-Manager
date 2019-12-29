@@ -36,7 +36,20 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXProgressBar;
+import java.util.Observable;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.FloatProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleFloatProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableFloatValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
@@ -45,18 +58,21 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import static oracle.jrockit.jfr.events.Bits.intValue;
 
 /**
  *
  * @author thinkpro
  */
-public class FXMLDocumentController extends Thread   {
+public class FXMLDocumentController extends Observable implements Runnable     {
     
                     private String path;
                     private ArrayList<File> files;
-
                     private String fileUrl;
                     String fileName;
+                    String etat = "DOWNLOADING";
+                    float downloaded;
+                    int progress;
 
            
            
@@ -94,93 +110,93 @@ public class FXMLDocumentController extends Thread   {
             
      void downloadFile(String fileUrl, String path )
             throws IOException {
+        String state= "DOWNLOADING";
         
-                 FXMLLoader loader = new FXMLLoader(getClass().getResource("FXMLDocument.fxml"));
 
         int BUFFER_SIZE = 4096;
         URL url = new URL(fileUrl);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-        int responseCode = httpConn.getResponseCode();
+        httpConn.setRequestProperty("Range",
+                             "bytes=" + this.downloaded + "-");
+        httpConn.connect();
+     //   int responseCode = httpConn.getResponseCode();
  
         // always check HTTP response code first
-        if (responseCode == HttpURLConnection.HTTP_OK) {
+     
+            
             String fileName = "";
             String disposition = httpConn.getHeaderField("Content-Disposition");
             String contentType = httpConn.getContentType();
             int contentLength = httpConn.getContentLength();
- 
+  
             if (disposition != null) {
                 // extracts file name from header field
                 int index = disposition.indexOf("filename=");
                 if (index > 0) {
-                    fileName = disposition.substring(index + 10,
+                  fileName = disposition.substring(index + 10,
                             disposition.length() - 1);
+                
                 }
             } else {
                 // extracts file name from URL
-                fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1,
+               fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1,
                         fileUrl.length());
+                 
             }
  
             System.out.println("Content-Type = " + contentType);
             System.out.println("Content-Disposition = " + disposition);
             System.out.println("Content-Length = " + contentLength);
             System.out.println("fileName = " + fileName);
-            this.fileName = fileName;
+            
+           this.fileName = fileName;
  
+            
             // opens input stream from the HTTP connection
-            InputStream inputStream = httpConn.getInputStream();
-            String saveFilePath =path + File.separator + fileName;
-        // creating the Hbox
-         /*   HBox hbox = new HBox();
-            hbox.setSpacing(20);
-            hbox.setAlignment(Pos.CENTER);
-        
-            Button play = new Button("Play");
-            Button pause = new Button("Pause");
-            Button delete = new Button("Delete");
-
-
-              
-                           
-                       
-                     
-                      
-                            
-                          
+             
+                    InputStream inputStream = httpConn.getInputStream();
+                    String saveFilePath =path + File.separator + fileName;
+       
                     
-
- 
-                            hbox.getChildren().add(play);
-                            hbox.getChildren().add(pause);
-                            hbox.getChildren().add(delete);
-                            hbox.getChildren().add(new Label(fileName));
-                            JFXProgressBar statusBars= new  JFXProgressBar();
-                            VBox controller = loader.getController();
-
-                            hbox.getChildren().add(statusBars);
-
-                
-              
-                        controller.getChildren().add(hbox); */
-         
                          // opens an output stream to save into file
             
             
-                FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+                        FileOutputStream outputStream = new FileOutputStream(saveFilePath);
                         int bytesRead = -1;
                         byte[] buffer = new byte[BUFFER_SIZE];
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
+                      
+                        
+                        
+                        if (this.etat =="PAUSED") {
+                                System.out.println("You paused it man !");
+        }
+                        
+                        
+                        while ((bytesRead = inputStream.read(buffer)) != -1 && this.etat== "DOWNLOADING") {
+                            
+                            
+                            outputStream.write(buffer, 0, (int) bytesRead);
+                                      this.downloaded += bytesRead;
+                                      System.out.println(this.downloaded);
+                                      
+                                    
+                                          this.progress=(int)((downloaded / contentLength) *100);
+                                      System.out.println(this.progress);
 
-                outputStream.close();
-                inputStream.close();
+                                    
+                                   
+                                       
+                                      
+                        }
+                
 
-                System.out.println("File downloaded");
-            } else {
-                System.out.println("No file to download. Server replied HTTP code: " + responseCode);
-            }
+                                outputStream.close();
+                                inputStream.close();
+                  if (etat == "DOWNLOADING") {
+                System.out.println("File downloaded"); }
+           
+            //   System.out.println("No file to download. Server replied HTTP code: " + responseCode);
+            
             httpConn.disconnect();
         }
 
@@ -219,6 +235,36 @@ public class FXMLDocumentController extends Thread   {
                     System.out.println(fileList[i]);
 }
 } 
+  /*public FloatProperty getProgress() {
+      
+      
+   if (this.progress==null) {
+       return new SimpleFloatProperty(0);
+       
+   }
+  return this.progress;
+  }
+   
+    */
+   
+public int getProgress() {
+    
+    return this.progress;
+}   
+   public String getFileName() {
+    
+    return this.fileName;
+}   
+   
+   
+   public void pause() {
+       this.etat="PAUSED";
+       this.stateChanged();
+   }
+    public void resume() {
+       this.etat="DOWNLOADING";
+       this.stateChanged();
+   }
      @Override
      public void run() {
      try {
@@ -230,6 +276,11 @@ public class FXMLDocumentController extends Thread   {
      }
    }
   
+        protected void stateChanged() {
+		setChanged();
+		notifyObservers();
+	}
+	
       
    
 }
