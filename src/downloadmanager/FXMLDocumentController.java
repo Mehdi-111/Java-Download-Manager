@@ -73,6 +73,9 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                     String etat = "DOWNLOADING";
                     float downloaded;
                     int progress;
+                    public static int cpt = 0;
+            
+                 
 
            
            
@@ -81,6 +84,8 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                           this.fileUrl = fileUrl;
                           this.path=path;
                           this.fileName=fileName;
+                          cpt++;
+                       
                       }
    
            
@@ -111,14 +116,15 @@ public class FXMLDocumentController extends Observable implements Runnable     {
      void downloadFile(String fileUrl, String path )
             throws IOException {
         String state= "DOWNLOADING";
-        
 
         int BUFFER_SIZE = 4096;
         URL url = new URL(fileUrl);
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-        httpConn.setRequestProperty("Range",
-                             "bytes=" + this.downloaded + "-");
-        httpConn.connect();
+      
+
+       // httpConn.setRequestProperty("Range",
+            //                 "bytes=" + this.downloaded + "-");
+    //    httpConn.connect();
      //   int responseCode = httpConn.getResponseCode();
  
         // always check HTTP response code first
@@ -128,7 +134,8 @@ public class FXMLDocumentController extends Observable implements Runnable     {
             String disposition = httpConn.getHeaderField("Content-Disposition");
             String contentType = httpConn.getContentType();
             int contentLength = httpConn.getContentLength();
-  
+            String byteRange = this.downloaded + "-" + contentLength;
+	//    httpConn.setRequestProperty("Range", "bytes=" + byteRange);
             if (disposition != null) {
                 // extracts file name from header field
                 int index = disposition.indexOf("filename=");
@@ -168,7 +175,7 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                         
                         
                         if (this.etat =="PAUSED") {
-                                System.out.println("You paused it man !");
+                            //    System.out.println("You paused it man !");
         }
                         
                         
@@ -177,11 +184,11 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                             
                             outputStream.write(buffer, 0, (int) bytesRead);
                                       this.downloaded += bytesRead;
-                                      System.out.println(this.downloaded);
+                                  //    System.out.println(this.downloaded);
                                       
                                     
                                           this.progress=(int)((downloaded / contentLength) *100);
-                                      System.out.println(this.progress);
+                             
 
                                     
                                    
@@ -193,6 +200,7 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                                 outputStream.close();
                                 inputStream.close();
                   if (etat == "DOWNLOADING") {
+                      this.etat="FINISHED";
                 System.out.println("File downloaded"); }
            
             //   System.out.println("No file to download. Server replied HTTP code: " + responseCode);
