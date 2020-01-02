@@ -44,8 +44,10 @@ import javafx.beans.property.FloatProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleFloatProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableFloatValue;
@@ -69,10 +71,11 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                     private String path;
                     private ArrayList<File> files;
                     private String fileUrl;
-                    String fileName;
+                    StringProperty fileName;
                     String etat = "DOWNLOADING";
+                    StringProperty etat2 ;
                     float downloaded;
-                    int progress;
+                    DoubleProperty progress;
                     public static int cpt = 0;
             
                  
@@ -80,10 +83,11 @@ public class FXMLDocumentController extends Observable implements Runnable     {
            
            
                         //constructor
-                      FXMLDocumentController( String fileUrl ,String path,String fileName) {
+                      FXMLDocumentController( String fileUrl ,String path) {
                           this.fileUrl = fileUrl;
                           this.path=path;
-                          this.fileName=fileName;
+                          this.etat2= new SimpleStringProperty("Downloading");
+                          progress = new SimpleDoubleProperty(0);
                           cpt++;
                        
                       }
@@ -156,7 +160,7 @@ public class FXMLDocumentController extends Observable implements Runnable     {
             System.out.println("Content-Length = " + contentLength);
             System.out.println("fileName = " + fileName);
             
-           this.fileName = fileName;
+          
  
             
             // opens input stream from the HTTP connection
@@ -187,7 +191,8 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                                   //    System.out.println(this.downloaded);
                                       
                                     
-                                          this.progress=(int)((downloaded / contentLength) *100);
+                                          this.progress.set((double)((downloaded / contentLength) *100));
+                                        //  String aux = String.valueOf((downloaded / contentLength) *100); 
                              
 
                                     
@@ -201,6 +206,7 @@ public class FXMLDocumentController extends Observable implements Runnable     {
                                 inputStream.close();
                   if (etat == "DOWNLOADING") {
                       this.etat="FINISHED";
+                     this.etat2.set("Finished");
                 System.out.println("File downloaded"); }
            
             //   System.out.println("No file to download. Server replied HTTP code: " + responseCode);
@@ -255,14 +261,8 @@ public class FXMLDocumentController extends Observable implements Runnable     {
    
     */
    
-public int getProgress() {
-    
-    return this.progress;
-}   
-   public String getFileName() {
-    
-    return this.fileName;
-}   
+ 
+  
    
    
    public void pause() {

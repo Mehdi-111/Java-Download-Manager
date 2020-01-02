@@ -44,6 +44,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 
 /**
  *
@@ -153,9 +154,9 @@ timer.schedule(new TimerTask() {
      void startDownload() throws IOException{
          
          
-       
+           
                 
-                FXMLDocumentController t1 = new FXMLDocumentController("","","");
+                FXMLDocumentController t1 = new FXMLDocumentController("","");
                if (t1.cpt > 3 ) {
                    System.out.println("C'est complet sahbi");
                    return;
@@ -172,12 +173,13 @@ timer.schedule(new TimerTask() {
                 hbox.setAlignment(Pos.CENTER);
                 
         
-                Button play = new Button("Play");
+                Button play = new Button("Resume");
                 play.setOnAction(new EventHandler<ActionEvent>() {
                     
                              @Override synchronized public void handle(ActionEvent e)     {
                              if (t1.etat != "FINISHED") {
                                      t1.resume();
+                                     t1.etat2.set("Downloading");
                              }
                               
                               
@@ -197,8 +199,10 @@ timer.schedule(new TimerTask() {
                     
                              @Override synchronized public void  handle(ActionEvent e)     {
                                        t1.pause();
+                                       t1.etat2.set("Paused");
                                        Thread t2 = new Thread(t1);
                                        t2.start();
+                                      
                               
                              
                               
@@ -211,28 +215,38 @@ timer.schedule(new TimerTask() {
                  delete.setOnAction(new EventHandler<ActionEvent>() {
                     
                              @Override synchronized public void  handle(ActionEvent e)     {
-                                      System.out.println(t1.progress);
+                                      tab.getChildren().remove(hbox);
+                                     t.stop();
                               
                            
                               
                           }
                       });
                 
-                 String FileName = fileNameInput.getText();
-                 if (FileName == "") {
-                     FileName = t1.fileName;
-                 }
+                    String FileName = fileNameInput.getText();
+               
   
 
-                hbox.getChildren().add(play);
-                hbox.getChildren().add(pause);
-                hbox.getChildren().add(delete);
-                Label label=  new Label(FileName);
-           //     label.textProperty().bind(t1.getFileName());
-                hbox.getChildren().add(label);
-                 ProgressBar statusBars= new ProgressBar();
-                hbox.getChildren().add(statusBars);
-                statusBars.progressProperty().bind(new SimpleIntegerProperty(t1.getProgress()));
+                    hbox.getChildren().add(play);
+                    hbox.getChildren().add(pause);
+                    hbox.getChildren().add(delete);
+                    Label label=  new Label();
+                   
+               //     label.textProperty().bind(t1.getFileName());
+                    hbox.getChildren().add(label);
+                    ProgressBar statusBars= new ProgressBar();
+                    hbox.getChildren().add(statusBars);
+                    statusBars.progressProperty().bind(t1.progress);
+                    Label label2=  new Label("Downloading");
+                    label2.textProperty().bind(t1.etat2);
+           
+               
+
+                    hbox.getChildren().add(label2);
+                    
+
+
+               
                 
              //   statusBars.progressProperty().bind(t1.getProgress());
              //   statusBars.progressProperty().bind(t1.getProgress());
@@ -243,6 +257,8 @@ timer.schedule(new TimerTask() {
 
 
                 tab.getChildren().add(hbox);
+                
+                
       }
     
      
